@@ -3,5 +3,7 @@
 !.gitignore
 !/Exec
 
-!DoubleWedgeIntersaction/*.cpp
+!DoubleWedgeIntersaction
+DoubleWedgeIntersaction/*
 !DoubleWedgeIntersaction/*.h
+!DoubleWedgeIntersaction/*.cpp
