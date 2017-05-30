@@ -7,12 +7,10 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Point_2.h>
 #include <CGAL/enum.h>
-
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <string>
-
 using namespace std;
 
 typedef CGAL::Simple_cartesian<double> Kernel;
@@ -31,3 +29,8 @@ void addDoubleWedge(Polyhedron& spaces, Line& a, Line& b);
 void getSingleWedge(Polyhedron& singleWedge, Line& a, Line& b);
 void explorePolyhedron(Polyhedron& dualRegion, Point& stabbingPoint);
 void addGap(Polyhedron& spaces, Line& a, Line& b);
+/*
+Added by Liu
+*/
+bool isParallel(vector<Segment> segments, bool& isVertical, double& cosine_alpha, double& sine_alpha);
+void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line&  stabbingLine, bool isVertical, double cosine_alpha, double sine_alpha);
