@@ -33,4 +33,4 @@ void addGap(Polyhedron& spaces, Line& a, Line& b);
 Added by Liu
 */
 bool isParallel(vector<Segment> segments, bool& isVertical, double& cosine_alpha, double& sine_alpha);
-void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line&  stabbingLine, bool isVertical, double cosine_alpha, double sine_alpha);
+bool getStabbingLinePara(Polyhedron dualRegion, vector<Segment> segments, Line&  stabbingLine, bool isVertical, double cosine_alpha, double sine_alpha);

@@ -104,6 +104,7 @@ bool isParallel(vector<Segment> segments, bool& isVertical, double& cosine_alpha
 	}
 	return isPara;
 }
+
 /*
 Added by Liu
 Find the stabbing line for cases where segments are parallel.
@@ -119,7 +120,7 @@ given a line : ax+by+c=0, rotate the line around the origin by alpha angle count
 
 ----------------------------end reference--------------------------------------------------------
 */
-void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line&  stabbingLine, bool isVertical, double cosine_alpha, double sine_alpha)
+bool getStabbingLinePara(Polyhedron dualRegion, vector<Segment> segments, Line&  stabbingLine, bool isVertical, double cosine_alpha, double sine_alpha)
 {
 	//The first step (rotation) : Rotate the coordinates to transform each segment (only if isVertical == false; otherwise do nothing)
 	if (!isVertical)
@@ -134,7 +135,7 @@ void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line
 			if (x1 != x2)
 			{
 				cout << "Error: difference of x coordinates: " << abs(x1 - x2) << ", segment is not vertical after transformation, check cosine_alpha and sine_alpha." << endl;
-				return;
+				return false;
 			}
 			segmentsTrans.push_back(make_pair(Point(x1, y1), Point(x2, y2)));
 		}
@@ -155,16 +156,19 @@ void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line
 		}
 		if (dualRegion.is_empty())
 		{
-			cout << "Error: empty intersected region." << endl;
-			return ;
+			//cout << "Error: empty intersected region." << endl;
+			//getStabbingLine(Polyhedron(Polyhedron::COMPLETE), segments, stabbingLine);
+			return false;
 		}
 	}	
 	bool isfind = false;
     Point stabbingPoint;
-	explorePolyhedron(dualRegion, stabbingPoint);
+	//explorePolyhedron(dualRegion, stabbingPoint);
 	Explorer e = dualRegion.explorer();
 	for (auto v = e.vertices_begin(); v != e.vertices_end(); ++v) {
-		if (e.is_standard(v)) {
+		stabbingPoint = e.point(v);
+		double bb = CGAL::to_double(-stabbingPoint.x())*sine_alpha + cosine_alpha;
+		if (e.is_standard(v) && bb != 0) {
 			isfind = true;
 			stabbingPoint = e.point(v);
 			//cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
@@ -175,23 +179,23 @@ void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line
 		stabbingLine = Line(-stabbingPoint.x(), 1, stabbingPoint.y()); 
 	else 
 	{ 
-		cout << "Error: region is non-empty, but stabbing point not found" << endl; 
-		return;
+		//cout << "Error: region is non-empty, but stabbing point not found" << endl; 
+		return false;
 	}
 
 	//The Third step (inverse rotation) :Inversely rotate the coordinates to get the stabbing line transformed back to origianl coordinates. (only if isVertical == false; otherwise do nothing)
 	if (!isVertical)
 	{		
-		double a = stabbingLine.a;
-		double b = stabbingLine.b;
-		double c = stabbingLine.c;
+		double a = CGAL::to_double(stabbingLine.a());
+		double b = CGAL::to_double(stabbingLine.b());
+		double c = CGAL::to_double(stabbingLine.c());
 		double aa = a*cosine_alpha - b*sine_alpha;
 		double bb = a*sine_alpha + b*cosine_alpha;
 		double cc = c;
 		if (bb == 0)
 		{
 			cout << "Error: stabbling line is vertical to the x-axis, this case cannot be handled here" << endl;
-			return;
+			return false;
 		}
 		aa = aa / bb;
 		cc = cc / bb;
@@ -199,8 +203,9 @@ void getStabbingLinePara(Polyhedron& dualRegion, vector<Segment>& segments, Line
 		stabbingPoint = Point(-aa, cc);
 	}
 	cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
-	return;
+	return true;
 }
+
 void runFromFile() {
 	Polyhedron dualRegion(Polyhedron::COMPLETE);
 	vector<Segment> segments;
@@ -213,11 +218,16 @@ void runFromFile() {
 	*/
 	bool isVertical = false;
 	double cosine_alpha, sine_alpha;
-	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha))
-		getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
-	else
+	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
+		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
+		if (!result)
+			getStabbingLine(dualRegion, segments, stabbingLine);
+	}
+	else {
 		getStabbingLine(dualRegion, segments, stabbingLine);
+	}
 }
+
 void runFromConsole() {
 	Polyhedron dualRegion(Polyhedron::COMPLETE);
 	vector<Segment> segments;
@@ -229,10 +239,14 @@ void runFromConsole() {
 	*/
 	bool isVertical = false;
 	double cosine_alpha, sine_alpha;
-	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha))
-		getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
-	else
+	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
+		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
+		if (!result)
+			getStabbingLine(dualRegion, segments, stabbingLine);
+	}
+	else {
 		getStabbingLine(dualRegion, segments, stabbingLine);
+	}
 }
 
 void runFromArgc(int argc, char** argv) {
@@ -254,10 +268,14 @@ void runFromArgc(int argc, char** argv) {
 	*/
 	bool isVertical = false;
 	double cosine_alpha, sine_alpha;
-	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha))
-		getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
-	else
+	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
+		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
+		if (!result)
+			getStabbingLine(dualRegion, segments, stabbingLine);
+	}
+	else {
 		getStabbingLine(dualRegion, segments, stabbingLine);
+	}
 }
 
 bool getStabbingLine(Polyhedron& dualRegion, vector<Segment>& segments, Line& stabbingLine) {
@@ -284,6 +302,7 @@ bool getStabbingLine(Polyhedron& dualRegion, vector<Segment>& segments, Line& st
 	Point stabbingPoint;
 	explorePolyhedron(dualRegion, stabbingPoint);
 	stabbingLine = Line(stabbingPoint.x(), 1, stabbingPoint.y());
+	cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
 	return true;
 }
 
@@ -341,7 +360,7 @@ void explorePolyhedron(Polyhedron& dualRegion, Point& stabbingPoint) {
 		if (e.is_standard(v)) {
 			stabbingPoint = e.point(v);
 			//cout << "standard" << endl;
-			cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
+			//cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
 			return;
 		}
 	}
