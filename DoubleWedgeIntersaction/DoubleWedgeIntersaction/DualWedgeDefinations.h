@@ -29,6 +29,8 @@ void addDoubleWedge(Polyhedron& spaces, Line& a, Line& b);
 void getSingleWedge(Polyhedron& singleWedge, Line& a, Line& b);
 void explorePolyhedron(Polyhedron& dualRegion, Point& stabbingPoint);
 void addGap(Polyhedron& spaces, Line& a, Line& b);
+void getStabbingLineStabsMostSegments(vector<Segment>& segments, Line& stabbingLine);
+void genStabbingLine(Polyhedron dualRegion, vector<Segment>& segments, int now, int start, int& count, Line& stabbingLine);
 /*
 Added by Liu
 */

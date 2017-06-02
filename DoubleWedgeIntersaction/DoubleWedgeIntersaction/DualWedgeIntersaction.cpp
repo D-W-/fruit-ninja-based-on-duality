@@ -220,11 +220,14 @@ void runFromFile() {
 	double cosine_alpha, sine_alpha;
 	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
 		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
-		if (!result)
-			getStabbingLine(dualRegion, segments, stabbingLine);
+		if (!result) {
+			getStabbingLineStabsMostSegments(segments, stabbingLine);
+			//getStabbingLine(dualRegion, segments, stabbingLine);
+		}
 	}
 	else {
-		getStabbingLine(dualRegion, segments, stabbingLine);
+		//getStabbingLine(dualRegion, segments, stabbingLine);
+		getStabbingLineStabsMostSegments(segments, stabbingLine);
 	}
 }
 
@@ -304,6 +307,51 @@ bool getStabbingLine(Polyhedron& dualRegion, vector<Segment>& segments, Line& st
 	stabbingLine = Line(stabbingPoint.x(), 1, stabbingPoint.y());
 	cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
 	return true;
+}
+
+void getStabbingLineStabsMostSegments(vector<Segment>& segments, Line& stabbingLine) {
+	Polyhedron dualRegion(Polyhedron::COMPLETE);
+	int count = 0;
+	genStabbingLine(dualRegion, segments, 0, 0, count, stabbingLine);
+	cout << CGAL::to_double(stabbingLine.a()) << " " << CGAL::to_double(stabbingLine.c()) << endl;
+}
+
+void addWedge(Polyhedron &dualRegion, Segment& segment) {
+	auto point1 = segment.first, point2 = segment.second;
+	//sort by x axis make sure the double wedge/ gap runs anticlockwise
+	if (point1.x() < point2.x()) {
+		addDoubleWedge(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
+	}
+	else if (point1.x() > point2.x()) {
+		addDoubleWedge(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
+	}
+	else	if (point1.y() < point2.y()) {
+		addGap(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
+	}
+	else  if (point1.y() > point2.y()) {
+		addGap(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
+	}
+}
+
+void genStabbingLine(Polyhedron dualRegion, vector<Segment>& segments, int now, int start, int& count, Line& stabbingLine) {
+	for (int i = start; i < segments.size(); ++i) {
+		auto dualRegiontemp = dualRegion;
+		auto segment = segments[i];
+		addWedge(dualRegiontemp, segment);
+		if (!dualRegiontemp.is_empty()) {
+			now += 1;
+			if (now > count) {
+				count = now;
+				Point stabbingPoint;
+				explorePolyhedron(dualRegiontemp, stabbingPoint);
+				stabbingLine = Line(stabbingPoint.x(), 1, stabbingPoint.y());
+			}
+			genStabbingLine(dualRegiontemp, segments, now, i + 1, count, stabbingLine);
+			now -= 1;
+		}
+
+	}
+
 }
 
 /*
