@@ -1,7 +1,0 @@
-﻿  源.cpp
-l:\fruit-ninja-based-on-duality\convexhull\convexhull\源.cpp(158): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 1 拥有了类型“double”
-l:\fruit-ninja-based-on-duality\convexhull\convexhull\源.cpp(158): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 2 拥有了类型“double”
-l:\fruit-ninja-based-on-duality\convexhull\convexhull\源.cpp(158): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 3 拥有了类型“double”
-l:\fruit-ninja-based-on-duality\convexhull\convexhull\源.cpp(158): warning C4477: “printf”: 格式字符串“%d”需要类型“int”的参数，但可变参数 4 拥有了类型“double”
-  ConvexHull.vcxproj -> L:\fruit-ninja-based-on-duality\ConvexHull\Debug\ConvexHull.exe
-  ConvexHull.vcxproj -> L:\fruit-ninja-based-on-duality\ConvexHull\Debug\ConvexHull.pdb (Full PDB)
