@@ -469,8 +469,8 @@ void explorePolyhedron(Polyhedron& dualRegion, Point& stabbingPoint) {
 
 
 int main(int argc, char** argv) {
-	//runFromArgc(argc, argv);
-	runFromConsole();
+	runFromArgc(argc, argv);
+	//runFromConsole();
 	//runFromFile();
 
 	return 0;
