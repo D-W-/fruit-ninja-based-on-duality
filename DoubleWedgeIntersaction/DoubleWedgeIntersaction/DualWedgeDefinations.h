@@ -11,11 +11,16 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
+#include <cstdlib>
+#include <cmath>
+#include <sys/timeb.h>
+
 using namespace std;
 
 typedef CGAL::Simple_cartesian<double> Kernel;
 typedef CGAL::Exact_rational RT;
-typedef CGAL::Extended_cartesian<RT> Extended_kernel;
+typedef CGAL::Extended_cartesian <RT> Extended_kernel;
 typedef CGAL::Nef_polyhedron_2<Extended_kernel> Polyhedron;
 typedef Polyhedron::Explorer Explorer;
 typedef Polyhedron::Line  Line;
@@ -31,6 +36,9 @@ void explorePolyhedron(Polyhedron& dualRegion, Point& stabbingPoint);
 void addGap(Polyhedron& spaces, Line& a, Line& b);
 void getStabbingLineStabsMostSegments(vector<Segment>& segments, Line& stabbingLine);
 void genStabbingLine(Polyhedron dualRegion, vector<Segment>& segments, int now, int start, int& count, Line& stabbingLine);
+void addWedge(Polyhedron &dualRegion, Segment& segment);
+bool hasOnlyVerticalStabbingLine(vector<Segment>& segments, Line& stabbingLine);
+
 /*
 Added by Liu
 */

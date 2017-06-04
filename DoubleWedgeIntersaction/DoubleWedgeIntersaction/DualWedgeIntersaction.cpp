@@ -1,4 +1,5 @@
 #include "DualWedgeDefinations.h"
+
 using namespace std;
 
 void testPointLocation(Polyhedron& dualRegion) {
@@ -132,7 +133,7 @@ bool getStabbingLinePara(Polyhedron dualRegion, vector<Segment> segments, Line& 
 			double y1 = -sine_alpha*CGAL::to_double(segment.first.x()) + cosine_alpha*CGAL::to_double(segment.first.y());
 			double x2 = cosine_alpha*CGAL::to_double(segment.second.x()) + sine_alpha*CGAL::to_double(segment.second.y());
 			double y2 = -sine_alpha*CGAL::to_double(segment.second.x()) + cosine_alpha*CGAL::to_double(segment.second.y());
-			if (x1 != x2)
+			if (abs(x1-x2) > 1e-10)
 			{
 				cout << "Error: difference of x coordinates: " << abs(x1 - x2) << ", segment is not vertical after transformation, check cosine_alpha and sine_alpha." << endl;
 				return false;
@@ -149,10 +150,10 @@ bool getStabbingLinePara(Polyhedron dualRegion, vector<Segment> segments, Line& 
 		point2 = segment.second;
 		//sort by x axis make sure the double wedge/ gap runs anticlockwise
      	if (point1.y() < point2.y()) {
-			addGap(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
+			addGap(dualRegion, Line(CGAL::to_double(-point1.x()), 1, CGAL::to_double(point1.y())), Line(CGAL::to_double(-point2.x()), 1, CGAL::to_double(point2.y())));
 		}
 		else  if (point1.y() > point2.y()) {
-			addGap(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
+			addGap(dualRegion, Line(CGAL::to_double (-point2.x()), 1, CGAL::to_double(point2.y())), Line(CGAL::to_double(-point1.x()), 1, CGAL::to_double(point1.y())));
 		}
 		if (dualRegion.is_empty())
 		{
@@ -171,12 +172,12 @@ bool getStabbingLinePara(Polyhedron dualRegion, vector<Segment> segments, Line& 
 		if (e.is_standard(v) && bb != 0) {
 			isfind = true;
 			stabbingPoint = e.point(v);
-			//cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
+			cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
 			break;
 		}
 	}
 	if (isfind) 
-		stabbingLine = Line(-stabbingPoint.x(), 1, stabbingPoint.y()); 
+		stabbingLine = Line(CGAL::to_double(-stabbingPoint.x()), 1, CGAL::to_double(stabbingPoint.y()));
 	else 
 	{ 
 		//cout << "Error: region is non-empty, but stabbing point not found" << endl; 
@@ -202,33 +203,58 @@ bool getStabbingLinePara(Polyhedron dualRegion, vector<Segment> segments, Line& 
 		stabbingLine = Line(aa, 1, cc);
 		stabbingPoint = Point(-aa, cc);
 	}
-	cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
+	//cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
 	return true;
 }
 
 void runFromFile() {
-	Polyhedron dualRegion(Polyhedron::COMPLETE);
-	vector<Segment> segments;
-	Line stabbingLine;
-	ifstream ifs("test.data");
-	getSegmentsFromStream(ifs, segments);
-	/*
-	Added by Liu: 
-	if isParallel() returns true, the program goes to getStabbingLinePara(), otherwise it goes to getStabbingLine();
-	*/
-	bool isVertical = false;
-	double cosine_alpha, sine_alpha;
-	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
-		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
-		if (!result) {
-			getStabbingLineStabsMostSegments(segments, stabbingLine);
-			//getStabbingLine(dualRegion, segments, stabbingLine);
+	for (int j = 1; j <= 5; ++j) {
+		string prefix = "round_para_" + to_string(j);
+		for (int iter = 1; iter <= 10; ++iter) {
+			struct timeb t_start, t_end;
+			string suffix = to_string(iter) + ".txt";
+			Polyhedron dualRegion(Polyhedron::COMPLETE);
+			vector<Segment> segments;
+			Line stabbingLine;
+			ifstream ifs(prefix + "//group_" + suffix);
+			//cout << "--------------------------" << suffix << "-------------------------------" << endl;
+			getSegmentsFromStream(ifs, segments);
+			//ftime(&t_start);
+			//bool result = getStabbingLine(dualRegion, segments, stabbingLine);
+			//ftime(&t_end);
+			//cout << (t_end.time - t_start.time) * 1000 + (t_end.millitm - t_start.millitm) << endl;
+			//if (!result) {
+			//	cout << "no common stabbing line" << endl;
+			//	ftime(&t_start);
+			//	getStabbingLineStabsMostSegments(segments, stabbingLine);
+			//	ftime(&t_end);
+			//	cout << (t_end.time - t_start.time) * 1000 + (t_end.millitm - t_start.millitm) << endl;
+			//}
+			/*
+			Added by Liu:
+			if isParallel() returns true, the program goes to getStabbingLinePara(), otherwise it goes to getStabbingLine();
+			*/
+			bool isVertical = false;
+			double cosine_alpha, sine_alpha;
+			
+			if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
+				ftime(&t_start);
+				bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
+				ftime(&t_end);
+				cout << (t_end.time - t_start.time) * 1000 + (t_end.millitm - t_start.millitm) << endl;
+				if (!result) {
+					getStabbingLineStabsMostSegments(segments, stabbingLine);
+				}
+			}
+
+			//else {
+			//	//getStabbingLine(dualRegion, segments, stabbingLine);
+			//	getStabbingLineStabsMostSegments(segments, stabbingLine);
+			//}
 		}
+
 	}
-	else {
-		//getStabbingLine(dualRegion, segments, stabbingLine);
-		getStabbingLineStabsMostSegments(segments, stabbingLine);
-	}
+
 }
 
 void runFromConsole() {
@@ -242,13 +268,20 @@ void runFromConsole() {
 	*/
 	bool isVertical = false;
 	double cosine_alpha, sine_alpha;
+	bool result = false;
 	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
-		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
+		result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
 		if (!result)
-			getStabbingLine(dualRegion, segments, stabbingLine);
+			result = getStabbingLine(dualRegion, segments, stabbingLine);
 	}
 	else {
-		getStabbingLine(dualRegion, segments, stabbingLine);
+		result = getStabbingLine(dualRegion, segments, stabbingLine);
+	}
+	if (!result) {
+		result = hasOnlyVerticalStabbingLine(segments, stabbingLine);
+	}
+	if (!result) {
+		getStabbingLineStabsMostSegments(segments, stabbingLine);
 	}
 }
 
@@ -271,40 +304,60 @@ void runFromArgc(int argc, char** argv) {
 	*/
 	bool isVertical = false;
 	double cosine_alpha, sine_alpha;
+	bool result = false;
 	if (isParallel(segments, isVertical, cosine_alpha, sine_alpha)) {
-		bool result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
-		if (!result)
-			getStabbingLine(dualRegion, segments, stabbingLine);
+		result = getStabbingLinePara(dualRegion, segments, stabbingLine, isVertical, cosine_alpha, sine_alpha);
+		if (!result) {
+			result = getStabbingLine(dualRegion, segments, stabbingLine);
+		}
 	}
 	else {
-		getStabbingLine(dualRegion, segments, stabbingLine);
+		result = getStabbingLine(dualRegion, segments, stabbingLine);
+	}
+	if (!result) {
+		result = hasOnlyVerticalStabbingLine(segments, stabbingLine);
+	}
+	if (!result) {
+		getStabbingLineStabsMostSegments(segments, stabbingLine);
+	}
+}
+
+bool hasOnlyVerticalStabbingLine(vector<Segment>& segments, Line& stabbingLine) {
+	if (segments.empty())
+		return false;
+	double leftMax = 0, rightMin = CGAL::to_double(segments[0].second.x());
+	for (auto segment : segments) {
+		double x1 = CGAL::to_double(segment.first.x()), x2 = CGAL::to_double(segment.second.x());
+		leftMax = max(x1, leftMax);
+		rightMin = min(x2, rightMin);
+		if (leftMax > rightMin)
+			return false;
+	}
+	if (leftMax == rightMin) {
+		stabbingLine = Line(1, 0, CGAL::to_double(-leftMax));
+		cout << "x = " << leftMax << endl;
+		return true;
+	}
+	else {
+		return false;
 	}
 }
 
 bool getStabbingLine(Polyhedron& dualRegion, vector<Segment>& segments, Line& stabbingLine) {
 	Point point1, point2;
+	//struct timeb t_start, t_end;
 	for (auto segment : segments) {
-		point1 = segment.first;
-		point2 = segment.second;
+		//ftime(&t_start);
 		//sort by x axis make sure the double wedge/ gap runs anticlockwise
-		if (point1.x() < point2.x()) {
-			addDoubleWedge(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
-		}
-		else if (point1.x() > point2.x()) {
-			addDoubleWedge(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
-		}
-		else	if (point1.y() < point2.y()) {
-			addGap(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
-		}
-		else  if (point1.y() > point2.y()) {
-			addGap(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
-		}
+		addWedge(dualRegion, segment);
+		//ftime(&t_end);
+		//cout << (t_end.time - t_start.time) * 1000 + (t_end.millitm - t_start.millitm) << endl;
 		if (dualRegion.is_empty())
 			return false;
 	}
 	Point stabbingPoint;
 	explorePolyhedron(dualRegion, stabbingPoint);
-	stabbingLine = Line(stabbingPoint.x(), 1, stabbingPoint.y());
+	stabbingLine = Line(CGAL::to_double(stabbingPoint.x()), 1, CGAL::to_double(stabbingPoint.y()));
 	cout << CGAL::to_double(stabbingPoint.x()) << " " << CGAL::to_double(stabbingPoint.y()) << endl;
 	return true;
 }
@@ -320,16 +373,16 @@ void addWedge(Polyhedron &dualRegion, Segment& segment) {
 	auto point1 = segment.first, point2 = segment.second;
 	//sort by x axis make sure the double wedge/ gap runs anticlockwise
 	if (point1.x() < point2.x()) {
-		addDoubleWedge(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
+		addDoubleWedge(dualRegion, Line(CGAL::to_double(-point1.x()), 1, CGAL::to_double(point1.y())), Line(CGAL::to_double(-point2.x()), 1, CGAL::to_double(point2.y())));
 	}
 	else if (point1.x() > point2.x()) {
-		addDoubleWedge(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
+		addDoubleWedge(dualRegion, Line(CGAL::to_double(-point2.x()), 1, CGAL::to_double(point2.y())), Line(CGAL::to_double(-point1.x()), 1, CGAL::to_double(point1.y())));
 	}
 	else	if (point1.y() < point2.y()) {
-		addGap(dualRegion, Line(-point1.x(), 1, point1.y()), Line(-point2.x(), 1, point2.y()));
+		addGap(dualRegion, Line(CGAL::to_double(-point1.x()), 1, CGAL::to_double(point1.y())), Line(CGAL::to_double(-point2.x()), 1, CGAL::to_double(point2.y())));
 	}
 	else  if (point1.y() > point2.y()) {
-		addGap(dualRegion, Line(-point2.x(), 1, point2.y()), Line(-point1.x(), 1, point1.y()));
+		addGap(dualRegion, Line(CGAL::to_double(-point2.x()), 1, CGAL::to_double(point2.y())), Line(CGAL::to_double(-point1.x()), 1, CGAL::to_double(point1.y())));
 	}
 }
 
@@ -344,7 +397,7 @@ void genStabbingLine(Polyhedron dualRegion, vector<Segment>& segments, int now, 
 				count = now;
 				Point stabbingPoint;
 				explorePolyhedron(dualRegiontemp, stabbingPoint);
-				stabbingLine = Line(stabbingPoint.x(), 1, stabbingPoint.y());
+				stabbingLine = Line(CGAL::to_double(stabbingPoint.x()), 1, CGAL::to_double(stabbingPoint.y()));
 			}
 			genStabbingLine(dualRegiontemp, segments, now, i + 1, count, stabbingLine);
 			now -= 1;
@@ -417,8 +470,8 @@ void explorePolyhedron(Polyhedron& dualRegion, Point& stabbingPoint) {
 
 int main(int argc, char** argv) {
 	//runFromArgc(argc, argv);
-	//runFromConsole();
-	runFromFile();
+	runFromConsole();
+	//runFromFile();
 
 	return 0;
 }
